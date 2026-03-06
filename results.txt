@@ -1,0 +1,7 @@
+https://youtube.com/config
+https://youtube.com/backup
+https://youtube.com/test
+https://youtube.com/api
+https://youtube.com/uploads
+https://youtube.com/dev
+https://youtube.com/dashboard
