@@ -1,13 +1,14 @@
-# DirHunter
+# DirHunter v2
 
-Fast directory brute-force tool written in Python.
+Fast directory and file brute-force tool for web reconnaissance.
 
 Features:
 - Multithreaded scanning
-- Colored output
-- Custom wordlists
-- Results saving
+- Random user-agents
+- File extension scanning
+- Progress bar
+- JSON report generation
 
 Usage:
 
-python3 dirhunter.py -u https://target.com -w wordlist.txt -t 20
+python3 dirhunter.py -u https://target.com -w wordlist.txt -t 30

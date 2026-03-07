@@ -1,0 +1,30 @@
+[
+    {
+        "url": "https://youtube.com/backup",
+        "status": 200
+    },
+    {
+        "url": "https://youtube.com/uploads",
+        "status": 200
+    },
+    {
+        "url": "https://youtube.com/test",
+        "status": 200
+    },
+    {
+        "url": "https://youtube.com/config",
+        "status": 200
+    },
+    {
+        "url": "https://youtube.com/api",
+        "status": 200
+    },
+    {
+        "url": "https://youtube.com/dev",
+        "status": 200
+    },
+    {
+        "url": "https://youtube.com/dashboard",
+        "status": 200
+    }
+]

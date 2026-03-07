@@ -1,53 +1,78 @@
 import requests
 import argparse
 from concurrent.futures import ThreadPoolExecutor
-from colorama import Fore, init
+from tqdm import tqdm
+from fake_useragent import UserAgent
+import json
 
-init(autoreset=True)
+results = []
+ua = UserAgent()
 
-found_urls = []
+def scan(url, word, extensions):
 
-def scan(url, word):
     word = word.strip()
-    target = f"{url}/{word}"
 
-    try:
-        r = requests.get(target, timeout=5)
+    paths = [word]
 
-        if r.status_code in [200,301,302,403]:
-            print(Fore.GREEN + f"[+] Found: {target} | {r.status_code}")
-            found_urls.append(target)
-        else:
-            print(Fore.RED + f"[-] Not Found: {target}")
+    for ext in extensions:
+        paths.append(word + ext)
 
-    except:
-        pass
+    for path in paths:
+
+        target = f"{url}/{path}"
+
+        headers = {
+            "User-Agent": ua.random
+        }
+
+        try:
+
+            r = requests.get(target, headers=headers, timeout=5)
+
+            if r.status_code in [200,301,302,403]:
+
+                print(f"[+] {target} | {r.status_code}")
+
+                results.append({
+                    "url": target,
+                    "status": r.status_code
+                })
+
+        except:
+            pass
 
 
 def main():
 
-    parser = argparse.ArgumentParser(description="DirHunter Advanced Scanner")
-    parser.add_argument("-u","--url",required=True)
-    parser.add_argument("-w","--wordlist",required=True)
-    parser.add_argument("-t","--threads",type=int,default=10)
+    parser = argparse.ArgumentParser(description="DirHunter v2")
+
+    parser.add_argument("-u","--url", required=True)
+    parser.add_argument("-w","--wordlist", required=True)
+    parser.add_argument("-t","--threads", type=int, default=20)
+    parser.add_argument("-e","--extensions", default=".php,.html,.js")
 
     args = parser.parse_args()
+
+    extensions = args.extensions.split(",")
 
     with open(args.wordlist,"r") as f:
         words = f.readlines()
 
-    print(Fore.CYAN + f"\nStarting scan on {args.url}\n")
+    print("\nStarting DirHunter Scan...\n")
 
     with ThreadPoolExecutor(max_workers=args.threads) as executor:
-        for word in words:
-            executor.submit(scan,args.url,word)
 
-    if found_urls:
-        with open("results.txt","w") as f:
-            for url in found_urls:
-                f.write(url+"\n")
+        for word in tqdm(words):
 
-        print(Fore.YELLOW + "\nResults saved in results.txt")
+            executor.submit(scan,args.url,word,extensions)
+
+    with open("report.json","w") as f:
+
+        json.dump(results,f,indent=4)
+
+    print("\nScan Complete")
+    print("Report saved to report.json")
+
 
 if __name__ == "__main__":
     main()
