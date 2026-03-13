@@ -1,14 +1,13 @@
-import requests
+import asyncio
+import aiohttp
 import argparse
-from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
-from fake_useragent import UserAgent
 import json
+from datetime import datetime
 
 results = []
-ua = UserAgent()
 
-def scan(url, word, extensions):
+async def scan(session, url, word, extensions, proxy):
 
     word = word.strip()
 
@@ -21,58 +20,87 @@ def scan(url, word, extensions):
 
         target = f"{url}/{path}"
 
-        headers = {
-            "User-Agent": ua.random
-        }
-
         try:
 
-            r = requests.get(target, headers=headers, timeout=5)
+            async with session.get(target, proxy=proxy) as response:
 
-            if r.status_code in [200,301,302,403]:
+                if response.status in [200,301,302,403]:
 
-                print(f"[+] {target} | {r.status_code}")
+                    print(f"[+] {target} | {response.status}")
 
-                results.append({
-                    "url": target,
-                    "status": r.status_code
-                })
+                    results.append({
+                        "url": target,
+                        "status": response.status
+                    })
 
         except:
             pass
 
 
-def main():
+async def main():
 
-    parser = argparse.ArgumentParser(description="DirHunter v2")
+    parser = argparse.ArgumentParser(description="DirHunter v3")
 
-    parser.add_argument("-u","--url", required=True)
-    parser.add_argument("-w","--wordlist", required=True)
-    parser.add_argument("-t","--threads", type=int, default=20)
-    parser.add_argument("-e","--extensions", default=".php,.html,.js")
+    parser.add_argument("-u","--url",required=True)
+    parser.add_argument("-w","--wordlist",required=True)
+    parser.add_argument("-e","--extensions",default=".php,.html,.js")
+    parser.add_argument("-p","--proxy",default=None)
 
     args = parser.parse_args()
 
     extensions = args.extensions.split(",")
 
-    with open(args.wordlist,"r") as f:
+    with open(args.wordlist) as f:
         words = f.readlines()
 
-    print("\nStarting DirHunter Scan...\n")
+    connector = aiohttp.TCPConnector(limit=100)
 
-    with ThreadPoolExecutor(max_workers=args.threads) as executor:
+    async with aiohttp.ClientSession(connector=connector) as session:
 
-        for word in tqdm(words):
+        tasks = []
 
-            executor.submit(scan,args.url,word,extensions)
+        for word in words:
+
+            tasks.append(scan(session,args.url,word,extensions,args.proxy))
+
+        for task in tqdm(asyncio.as_completed(tasks), total=len(tasks)):
+
+            await task
 
     with open("report.json","w") as f:
 
         json.dump(results,f,indent=4)
 
-    print("\nScan Complete")
-    print("Report saved to report.json")
+    generate_html()
+
+
+def generate_html():
+
+    html = f"""
+    <html>
+    <head>
+    <title>DirHunter Report</title>
+    </head>
+    <body>
+    <h1>DirHunter Scan Report</h1>
+    <p>Date: {datetime.now()}</p>
+    <table border="1">
+    <tr><th>URL</th><th>Status</th></tr>
+    """
+
+    for r in results:
+
+        html += f"<tr><td>{r['url']}</td><td>{r['status']}</td></tr>"
+
+    html += "</table></body></html>"
+
+    with open("report.html","w") as f:
+
+        f.write(html)
+
+    print("\nHTML report saved as report.html")
 
 
 if __name__ == "__main__":
-    main()
+
+    asyncio.run(main())

@@ -4,11 +4,7 @@
         "status": 200
     },
     {
-        "url": "https://youtube.com/uploads",
-        "status": 200
-    },
-    {
-        "url": "https://youtube.com/test",
+        "url": "https://youtube.com/api",
         "status": 200
     },
     {
@@ -16,7 +12,11 @@
         "status": 200
     },
     {
-        "url": "https://youtube.com/api",
+        "url": "https://youtube.com/uploads",
+        "status": 200
+    },
+    {
+        "url": "https://youtube.com/test",
         "status": 200
     },
     {
